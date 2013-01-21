@@ -24,11 +24,12 @@ namespace Lokad.CodeDsl
         static readonly Mutex AppLock = new Mutex(true, "2DB34E68-F80D-4ED0-975A-409C2CDAF241");
 
         static readonly ConcurrentDictionary<string, string> States = new ConcurrentDictionary<string, string>();
+
+        static INotify _notify;
         public static NotifyIcon TrayIcon;
-        static string _lastTitle;
-        static string _lastMessage;
-        static ToolTipIcon _lastIcon;
+
         private static IEnumerable<FileSystemWatcher> _notifiers;
+        private static string[] _files;
 
         static void Main(string[] args)
         {
@@ -37,19 +38,43 @@ namespace Lokad.CodeDsl
                 return;
             }
 
-            var iconStream = Assembly.GetEntryAssembly().GetManifestResourceStream("Lokad.CodeDsl.code_colored.ico");
-            TrayIcon = new NotifyIcon
+            if (args.Length == 0)
             {
-                Visible = true,
-            };
+                Console.WriteLine("DSL .NET contracts generator.");
+                Console.WriteLine("\tUsage: dsl.exe <path1> .. <pathN> [--tray]");
+                Console.WriteLine("\t <path1> .. <pathN> - path to folder with dsl files.");
+                Console.WriteLine("\t --tray - options to start tray application.");
+            }
 
-            if (iconStream != null)
-                TrayIcon.Icon = new Icon(iconStream);
+            if (args.Any(x => x.Equals("--tray")))
+            {
+                CreateTrayIconApp();
 
-            TrayIcon.Click += TrayIconClick;
-            TrayIcon.ContextMenu = new ContextMenu(
-                new[] { new MenuItem("Close", (sender, eventArgs) => Close())});
+                _notify = new TrayNotify(TrayIcon);
 
+                var options = args.ToList();
+                options.Remove("--tray");
+
+                _files = CreateFileWatchers(options.ToArray());
+                StartupRebuild(_files);
+
+                AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
+                Application.ThreadExit += ApplicationThreadExit;
+                Application.Run(new Empty());
+            }
+            else
+            {
+                _notify = new ConsoleNotify();
+
+                _files = CreateFileWatchers(args);
+                StartupRebuild(_files);
+
+                Console.ReadLine();
+            }
+        }
+
+        private static string[] CreateFileWatchers(string [] args)
+        {
             var lookupPaths = FigureOutLookupPath(args);
 
             _notifiers = GetDirectoryWatchers(lookupPaths);
@@ -59,12 +84,7 @@ namespace Lokad.CodeDsl
                 notifier.Changed += NotifierOnChanged;
                 notifier.EnableRaisingEvents = true;
             }
-
-            StartupRebuild(lookupPaths);
-
-            AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
-            Application.ThreadExit += ApplicationThreadExit;
-            Application.Run(new Empty());
+            return lookupPaths;
         }
 
         private static void StartupRebuild(string [] lookupPAth)
@@ -92,7 +112,7 @@ namespace Lokad.CodeDsl
 
             message += "\r\n\r\nClick icon to see last message.";
 
-            ShowBalloonTip("Dsl started", message, ToolTipIcon.Info);
+             _notify.Notify("Dsl started", message, ToolTipIcon.Info);
 
             foreach (var fileInfo in files)
             {
@@ -105,7 +125,7 @@ namespace Lokad.CodeDsl
                 }
                 catch (Exception ex)
                 {
-                    ShowBalloonTip("Parse error - " + fileInfo.Name, ex.Message, ToolTipIcon.Error);
+                    _notify.Notify("Parse error - " + fileInfo.Name, ex.Message, ToolTipIcon.Error);
                 }
             }
         }
@@ -118,16 +138,7 @@ namespace Lokad.CodeDsl
                 .Select(d => new FileSystemWatcher(d, FileNamePattern) { IncludeSubdirectories = true})
                 .ToArray();
         }
-
-        private static void ShowBalloonTip(string title, string message, ToolTipIcon toolTipIcon)
-        {
-            _lastTitle = title;
-            _lastMessage = message;
-            _lastIcon = toolTipIcon;
-
-            TrayIcon.ShowBalloonTip(10000, _lastTitle, _lastMessage, _lastIcon);
-        }
-
+        
         static void ApplicationThreadExit(object sender, EventArgs e)
         {
             Close();
@@ -140,7 +151,8 @@ namespace Lokad.CodeDsl
 
         static void TrayIconClick(object sender, EventArgs e)
         {
-            ShowBalloonTip(_lastTitle, _lastMessage, _lastIcon);
+            // repeat last notification
+            _notify.Notify(string.Empty, string.Empty, ToolTipIcon.Info);
         }
 
         static void Close()
@@ -188,14 +200,14 @@ namespace Lokad.CodeDsl
                 Console.WriteLine(message);
                 Rebuild(text, args.FullPath);
 
-                ShowBalloonTip(args.Name, "File rebuild complete", ToolTipIcon.Info);
+                _notify.Notify(args.Name, "File rebuild complete", ToolTipIcon.Info);
                 SystemSounds.Beep.Play();
             }
             catch (IOException) {}
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                ShowBalloonTip("Error - " + args.Name, ex.Message, ToolTipIcon.Error);
+                _notify.Notify("Error - " + args.Name, ex.Message, ToolTipIcon.Error);
 
                 SystemSounds.Exclamation.Play();
             }
@@ -232,5 +244,66 @@ public partial class {0}",
   
             File.WriteAllText(Path.ChangeExtension(fullPath, "cs"), GeneratorUtil.Build(dsl, generator));
         }
+
+        private static void CreateTrayIconApp()
+        {
+            var iconStream = Assembly.GetEntryAssembly().GetManifestResourceStream("Lokad.CodeDsl.code_colored.ico");
+            TrayIcon = new NotifyIcon
+            {
+                Visible = true,
+            };
+
+            if (iconStream != null)
+                TrayIcon.Icon = new Icon(iconStream);
+
+            TrayIcon.Click += TrayIconClick;
+            TrayIcon.ContextMenu = new ContextMenu(
+                new[] { new MenuItem("Close", (sender, eventArgs) => Close()) });
+        }
+    }
+
+    public interface INotify
+    {
+        void Notify(string message, string title, ToolTipIcon type);
+    }
+
+    class TrayNotify : INotify
+    {
+        static string _lastTitle;
+        static string _lastMessage;
+        static ToolTipIcon _lastIcon;
+
+        private readonly NotifyIcon _icon;
+
+        public TrayNotify(NotifyIcon icon)
+        {
+            _icon = icon;
+        }
+
+        public void Notify(string message, string title, ToolTipIcon type)
+        {
+            if (!string.IsNullOrEmpty(message))
+            {
+                _lastMessage = message;
+                _lastTitle = title;
+                _lastIcon = type;
+            }
+
+            _icon.ShowBalloonTip(10000, _lastTitle, _lastMessage, _lastIcon);
+        }
+    }
+
+    public class ConsoleNotify : INotify
+    {
+        public void Notify(string message, string title, ToolTipIcon type)
+        {
+            Console.WriteLine("{0}\r\n\tMessage: {1}\r\n\t{2}", type.ToString(), title, message);
+        }
+    }
+
+    public enum NotifyType
+    {
+        Info,
+        Error
     }
 }
