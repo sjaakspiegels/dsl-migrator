@@ -1,18 +1,39 @@
-﻿
-**Lokad Code DSL** ([homepage](http://lokad.github.com/lokad-codedsl/)) is shared as open 
-source project by [Lokad](http://www.lokad.com) in hopes that it would benefit the community. 
-
-You can get download binary from [github downloads](https://github.com/Lokad/lokad-codedsl/downloads).
-
-About
------
+# About
 
 
 Lokad Contracts DSL is an optional console utility that you can run in the background. It 
-tracks changes to files with special compact syntax and updates CS file. Changes are 
-immediate upon saving file (and ReSharper immediately picks them). This is an improved 
+tracks changes to files with special compact syntax and updates CS file with message 
+contract definitions. 
+
+Changes are immediate upon saving file (and ReSharper immediately picks them). This is an improved 
 version of Lokad Code DSL, it supports identities and can auto-generate interfaces for 
 aggregates and aggregate state classes.
+
+**Was**:
+
+```csharp
+AddSecurityPassword?(SecurityId id, string displayName, string login, string password)
+```    
+**Becomes**:
+```csharp
+[DataContract(Namespace = "Sample")]
+public partial class AddSecurityPassword : ICommand<SecurityId>
+{
+    [DataMember(Order = 1)] public SecurityId Id { get; private set; }
+    [DataMember(Order = 2)] public string DisplayName { get; private set; }
+    [DataMember(Order = 3)] public string Login { get; private set; }
+    [DataMember(Order = 4)] public string Password { get; private set; }
+ 
+    AddSecurityPassword () {}
+    public AddSecurityPassword (SecurityId id, string displayName, string login, string password)
+    {
+        Id = id;
+        DisplayName = displayName;
+        Login = login;
+        Password = password;
+    }
+}
+```    
 
 Lokad Code DSL is used by [Lokad.CQRS](http://lokad.github.com/lokad-cqrs/) (was originally part of it) 
 and is explained in greater detail in [BeingTheWorst Podcast](http://beingtheworst.com/) - Episode 12.
@@ -25,81 +46,107 @@ save (view [Contracts.cs source](http://github.com/Lokad/lokad-codedsl/blob/mast
 Current DSL code generates contracts classes that are compatible with DataContracts, 
 ServiceStack.JSON and ProtoBuf.
 
+You can get download binary from [github downloads](https://github.com/Lokad/lokad-codedsl/downloads). Sometimes
+even later stable version would be available by getting latest source code and building.
+
+
+**Lokad Code DSL** ([homepage](http://lokad.github.com/lokad-codedsl/)) is shared as open 
+source project by [Lokad](http://www.lokad.com) in hopes that it would benefit the community. 
+
+
 Syntax Definitions
 -----------------
 ### Namespaces
 
 Add namespace for our messages  
 
-    namespace NameSpace
+```csharp
+namespace NameSpace
+```
 
 **Result:**
 
-    namespace NameSpace  
-    {  
-    ...  
-    }
+```csharp
+namespace NameSpace  
+{  
+...  
+}
+```
 
 ### Data contract namespace
 
-    extern "Lokad"
+```csharp
+extern "Lokad"
+```
 
 **Result:**
 
-    [DataContract(Namespace = "Lokad")]
+```csharp
+[DataContract(Namespace = "Lokad")]
+```
 
 ### Simple Contract definitions
 
-    Universe(UniverseId Id, string name)
+```csharp
+Universe(UniverseId Id, string name)
+```
 
 **Result:**
 
-    [DataContract(Namespace = "Lokad")]
-    public partial class Universe
-    {
-        [DataMember(Order = 1)] public UniverseId Id { get; private set; }
-        [DataMember(Order = 2)] public string Name { get; private set; }
+```csharp
+[DataContract(Namespace = "Lokad")]
+public partial class Universe
+{
+    [DataMember(Order = 1)] public UniverseId Id { get; private set; }
+    [DataMember(Order = 2)] public string Name { get; private set; }
 
-        Universe () {}
-        public Universe (UniverseId id, string name)
-        {
-            Id = id;
-            Name = name;
-        }
+    Universe () {}
+    public Universe (UniverseId id, string name)
+    {
+        Id = id;
+        Name = name;
     }
+}
+```
 
 ### Interface Shortcuts
 
 In order to use interface in contract classes, need to create interface shortcut first, definition
 of interface IIdentity must be contained in C# file
     
-    if ! = IIdentity
-
+```csharp
+if ! = IIdentity
+```
 For the next step define simple class with one property
- 
-    UniverseId!(long id)
+
+```csharp
+UniverseId!(long id)
+```
 
 **Result:**
 
-    [DataContract(Namespace = "Lokad")]
-    public partial class UniverseId : IIdentity
+```csharp
+[DataContract(Namespace = "Lokad")]
+public partial class UniverseId : IIdentity
+{
+    [DataMember(Order = 1)] public long Id { get; private set; }
+    
+    UniverseId () {}
+    public UniverseId (long id)
     {
-        [DataMember(Order = 1)] public long Id { get; private set; }
-        
-        UniverseId () {}
-        public UniverseId (long id)
-        {
-            Id = id;
-        }
+        Id = id;
     }
-
+}
+```
 
 ### Method Argument Constants
 
 Method arguments constants allow us to define constant to replace method argument definition. For 
 example, now we can use term `dateUtc` instead full definition with argument type and name.
 
-    const dateUtc = DateTime dateUtc
+```csharp
+const dateUtc = DateTime dateUtc
+```
 
 ###
 
@@ -107,73 +154,78 @@ Application service & state
 ---------------------------
 Definition of application service must begining with interface key.
 
-    interface Universe(UniverseId Id)
-    {
-        // define shortcut for commands
-        if ? = IUniverseCommand
-        // define shortcut for events
-        if ! = IUniverseEvent<UniverseId>
+```csharp
+interface Universe(UniverseId Id)
+{
+    // define shortcut for commands
+    if ? = IUniverseCommand
+    // define shortcut for events
+    if ! = IUniverseEvent<UniverseId>
 
-        CreateUniverse?(name)
-            // override ToString() for command
-            explicit "Create universe - {name}"
-            UniverseCreated!(name)
-            // override ToString() for event
-            explicit "Universe {name} created"
-    }
+    CreateUniverse?(name)
+        // override ToString() for command
+        explicit "Create universe - {name}"
+        UniverseCreated!(name)
+        // override ToString() for event
+        explicit "Universe {name} created"
+}
+```
 
 **Result:**
 
-    public interface IUniverseApplicationService
-    {
-        void When(CreateUniverse c);
-    }
+```csharp
+public interface IUniverseApplicationService
+{
+    void When(CreateUniverse c);
+}
 
-    public interface IUniverseState
-    {
-        void When(UniverseCreated e);
-    }
+public interface IUniverseState
+{
+    void When(UniverseCreated e);
+}
+```
 
 Command and corresponding event
 
-    [DataContract(Namespace = "Lokad")]
-    public partial class CreateUniverse : IUniverseCommand
+```csharp
+[DataContract(Namespace = "Lokad")]
+public partial class CreateUniverse : IUniverseCommand
+{
+    [DataMember(Order = 1)] public UniverseId Id { get; private set; }
+    [DataMember(Order = 2)] public string Name { get; private set; }
+    
+    CreateUniverse () {}
+    public CreateUniverse (UniverseId id, string name)
     {
-        [DataMember(Order = 1)] public UniverseId Id { get; private set; }
-        [DataMember(Order = 2)] public string Name { get; private set; }
-        
-        CreateUniverse () {}
-        public CreateUniverse (UniverseId id, string name)
-        {
-            Id = id;
-            Name = name;
-        }
-        
-        public override string ToString()
-        {
-            return string.Format(@"Create universe - {0}", Name);
-        }
+        Id = id;
+        Name = name;
     }
-
-    [DataContract(Namespace = "Lokad")]
-    public partial class UniverseCreated : IUniverseEvent<UniverseId>
+    
+    public override string ToString()
     {
-        [DataMember(Order = 1)] public UniverseId Id { get; private set; }
-        [DataMember(Order = 2)] public string Name { get; private set; }
-        
-        UniverseCreated () {}
-        public UniverseCreated (UniverseId id, string name)
-        {
-            Id = id;
-            Name = name;
-        }
-        
-        public override string ToString()
-        {
-            return string.Format(@"Universe {0} created", Name);
-        }
+        return string.Format(@"Create universe - {0}", Name);
     }
+}
 
+[DataContract(Namespace = "Lokad")]
+public partial class UniverseCreated : IUniverseEvent<UniverseId>
+{
+    [DataMember(Order = 1)] public UniverseId Id { get; private set; }
+    [DataMember(Order = 2)] public string Name { get; private set; }
+    
+    UniverseCreated () {}
+    public UniverseCreated (UniverseId id, string name)
+    {
+        Id = id;
+        Name = name;
+    }
+    
+    public override string ToString()
+    {
+        return string.Format(@"Universe {0} created", Name);
+    }
+}
+```
 
 Syntax Highlights
 -----------------
