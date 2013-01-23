@@ -1,5 +1,6 @@
 ﻿
-**Lokad Code DSL** ([homepage](http://lokad.github.com/lokad-codedsl/)) is shared as open source project by [Lokad](http://www.lokad.com) in hopes that it would benefit the community. 
+**Lokad Code DSL** ([homepage](http://lokad.github.com/lokad-codedsl/)) is shared as open 
+source project by [Lokad](http://www.lokad.com) in hopes that it would benefit the community. 
 
 You can get download binary from [github downloads](https://github.com/Lokad/lokad-codedsl/downloads).
 
@@ -7,13 +8,22 @@ About
 -----
 
 
-Lokad Contracts DSL is an optional console utility that you can run in the background. It tracks changes to files with special compact syntax and updates CS file. Changes are immediate upon saving file (and ReSharper immediately picks them). This is an improved version of Lokad Code DSL, it supports identities and can auto-generate interfaces for aggregates and aggregate state classes.
+Lokad Contracts DSL is an optional console utility that you can run in the background. It 
+tracks changes to files with special compact syntax and updates CS file. Changes are 
+immediate upon saving file (and ReSharper immediately picks them). This is an improved 
+version of Lokad Code DSL, it supports identities and can auto-generate interfaces for 
+aggregates and aggregate state classes.
 
-Lokad Code DSL is used by [Lokad.CQRS](http://lokad.github.com/lokad-cqrs/) (was originally part of it) and is explained in greater detail in [BeingTheWorst Podcast](http://beingtheworst.com/) - Episode 12.
+Lokad Code DSL is used by [Lokad.CQRS](http://lokad.github.com/lokad-cqrs/) (was originally part of it) 
+and is explained in greater detail in [BeingTheWorst Podcast](http://beingtheworst.com/) - Episode 12.
 
-You can try this out by starting `Sample` project and then changing `Sample\Contracts.ddd` (view [Contracts.ddd source] (http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.ddd)). Code DSL tool will be regenerating corresponding contracts file as you change and save (view [Contracts.cs source](http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.cs)).
+You can try this out by starting `Sample` project and then changing `Sample\Contracts.ddd` 
+(view [Contracts.ddd source] (http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.ddd)). 
+Code DSL tool will be regenerating corresponding contracts file as you change and 
+save (view [Contracts.cs source](http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.cs)).
 
-Current DSL code generates contracts classes that are compatible with DataContracts, ServiceStack.JSON and ProtoBuf.
+Current DSL code generates contracts classes that are compatible with DataContracts, 
+ServiceStack.JSON and ProtoBuf.
 
 Syntax Definitions
 -----------------
@@ -60,7 +70,8 @@ Add namespace for our messages
 
 ### Interface Shortcuts
 
-In order to use interface in contract classes, need to create interface shortcut first, definition of interface IIdentity must be contained in C# file
+In order to use interface in contract classes, need to create interface shortcut first, definition
+of interface IIdentity must be contained in C# file
     
     if ! = IIdentity
 
@@ -85,7 +96,8 @@ For the next step define simple class with one property
 
 ### Method Argument Constants
 
-Method arguments constants allow us to define constant to replace method argument definition. For example, now we can use term `dateUtc` instead full definition with argument type and name.
+Method arguments constants allow us to define constant to replace method argument definition. For 
+example, now we can use term `dateUtc` instead full definition with argument type and name.
 
     const dateUtc = DateTime dateUtc
 
@@ -188,8 +200,8 @@ Editor customization
 
 Related articles
 -----------
-[Improved DSL Syntax for DDD and Event Sourcing] (http://abdullin.com/journal/2012/7/25/improved-dsl-syntax-for-ddd-and-event-sourcing.html)
-
+* **Tutorial**: [Extending Lokad DSL Tool](http://zbz5.net/extending-lokad-dsl-tool) by [Vidar Løvbrekke Sømme](https://twitter.com/vidarls)
+* [Improved DSL Syntax for DDD and Event Sourcing] (http://abdullin.com/journal/2012/7/25/improved-dsl-syntax-for-ddd-and-event-sourcing.html)
 
 Feedback
 --------
