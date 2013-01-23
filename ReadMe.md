@@ -175,8 +175,14 @@ Command and corresponding event
     }
 
 
-Editor customization
-------
+Syntax Highlights
+-----------------
+
+Syntax used in the DSL tool is derived from keywords in C++ and C#. This means, that
+any text editor could provide nice highlighting, if you use language color settings
+from C++ or C#.
+
+Here's how DSL source code might look like:
 
 <table>
 <thead>
@@ -194,6 +200,8 @@ Editor customization
 </table>  
 
 **Visual Studio 2010 settings**
+
+Here are the settings to set up in Visual Studio:
 
 ![Visual Studio settings] (https://github.com/Lokad/lokad-codedsl/raw/master/Docs/vs2010_settings.PNG)
 
