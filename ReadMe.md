@@ -8,12 +8,12 @@ Changes are immediate upon saving the .ddd file (and ReSharper immediately picks
 version of the Lokad Code DSL, it supports identities and can auto-generate interfaces for 
 aggregates and aggregate state classes.
 
-**Was**:
+**DSL syntax entered as**:
 
 ```csharp
 AddSecurityPassword?(SecurityId id, string displayName, string login, string password)
 ```    
-**Becomes**:
+**Becomes this C# code**:
 ```csharp
 [DataContract(Namespace = "Sample")]
 public partial class AddSecurityPassword : ICommand<SecurityId>
@@ -35,16 +35,16 @@ public partial class AddSecurityPassword : ICommand<SecurityId>
 ```    
 
 Lokad Code DSL is used by [Lokad.CQRS](http://lokad.github.com/lokad-cqrs/) (it was originally part of it) 
-and is explained in greater detail in [Being The Worst Podcast](http://beingtheworst.com/) - [Episode 12 - Now Serving DSL.](http://beingtheworst.com/2012/episode-12-now-serving-dsl)
+and is explained in greater detail on the [Being The Worst Podcast](http://beingtheworst.com/) - [Episode 12 - Now Serving DSL.](http://beingtheworst.com/2012/episode-12-now-serving-dsl)
 
 You can try this out by starting the `Lokad.Dsl.Sample` project, and then change the `Sample\Contracts.ddd` file and save it.
 (view [Contracts.ddd source] (http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.ddd)). 
-The Code DSL tool will run in a background console and will regenerate the corresponding contracts C# file as you change and save the .ddd file that contains the DSL (view [Contracts.cs source](http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.cs)).
+The Code DSL tool will run in a background console/tray icon and will regenerate the corresponding C# contracts file as you change and save the .ddd file that contains the DSL (view [Contracts.cs source](http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.cs)).
 
-The current DSL code generates contracts classes that are compatible with DataContracts, 
+The current DSL code generates contract classes that are compatible with DataContract, 
 ServiceStack.JSON and ProtoBuf.
 
-You can download the binary from [github downloads](https://github.com/Lokad/lokad-codedsl/downloads). On occasion, you can get even newer stable versions of this tool by downloading the latest source code from GitHub and building it.
+You can download the binary from [github downloads](https://github.com/Lokad/lokad-codedsl/downloads). On occasion, you can get newer stable versions of this tool by downloading the latest source code from GitHub and building it.
 
 
 **Lokad Code DSL** ([homepage](http://lokad.github.com/lokad-codedsl/)) is shared as an open 
@@ -70,9 +70,9 @@ namespace NameSpace
 }
 ```
 
-### Data contract namespace
+### Data Contract Namespace
 
-Define the namespace that that DataContract attribute will use
+Define the namespace that the Data Contract will use for the message
 
 ```csharp
 extern "Lokad"
@@ -84,7 +84,7 @@ extern "Lokad"
 [DataContract(Namespace = "Lokad")]
 ```
 
-### Simple Contract definitions
+### Simple Contract Definitions
 
 ```csharp
 Universe(UniverseId Id, string name)
@@ -110,12 +110,12 @@ public partial class Universe
 
 ### Interface Shortcuts
 
-To generate a contract class that implements an interface, you must define the name of the interface with the ! = shortcut first.  The definition of the interface that uses the interface identifier that you specifiy after the = must already exist and be contained in a C# file.  For example, the IIdentity interface is defined in Interfaces.cs in the sample project. 
+To generate a contract class that implements an interface, you must define the name of the interface with the ! = shortcut first.  The definition of the interface that uses the interface identifier that you specify after the = must already exist and be contained in a C# file.  For example, the IIdentity interface is defined in Interfaces.cs in the sample project. 
     
 ```csharp
 if ! = IIdentity
 ```
-Once you have asscoaited ! with an interface, define a class that implements it like this:
+Once you have associated ! with an interface, define a class that implements it like this:
 
 ```csharp
 UniverseId!(long id)
@@ -139,7 +139,7 @@ public partial class UniverseId : IIdentity
 
 ### Method Argument Constants
 
-Method argument constants allow us to define constant to replace a method argument definition. For 
+Method argument constants allow us to define a constant to replace a method argument definition. For 
 example, now we can use the constant term `dateUtc` instead of the full definition with the argument type and name.
 
 ```csharp
@@ -233,7 +233,7 @@ Syntax Highlighting
 -------------------
 
 The syntax used in the DSL tool is derived from keywords in the C++ and C# programming languages. This means that
-any text editor that understands these widely used programming languages can provide nice syntax highlighting (if you use the language-specific color settings from C++ or C#).
+any text editor that understands these widely used programming languages can provide nice syntax highlighting (if you use the language-specific color settings provided for C++ or C#).
 
 Here's how the DSL source code might look with syntax highlighting supported by the editor:
 
@@ -256,7 +256,7 @@ Here's how the DSL source code might look with syntax highlighting supported by 
 
 In Visual Studio, under the Tools-->Options menu:
 
-1. - add ddd as the Extension
+1. - add ddd as the file Extension
 1. - Select Microsoft Visual C# as the Editor
 1. - Click Add and OK
 
@@ -271,4 +271,4 @@ Related articles
 Feedback
 --------
 
-Please, feel free to drop feedback in the [Lokad Community Google group](https://groups.google.com/forum/#!forum/lokad).
+Please, feel free to drop feedback and question into the [Lokad Community Google group](https://groups.google.com/forum/#!forum/lokad).
