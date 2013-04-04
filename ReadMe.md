@@ -146,6 +146,19 @@ example, now we can use the constant term `dateUtc` instead of the full definiti
 const dateUtc = DateTime dateUtc
 ```
 
+To define an object with multiple properties that you would like to pass as a method argument:
+
+```csharp
+
+    ItemDetail(
+     string name,
+     string category,
+     int count)
+
+    DefineItem?(ItemDetail itemDetail, string anAdditionalString, string someOtherString)
+
+```
+
 ###
 
 Application service & state
