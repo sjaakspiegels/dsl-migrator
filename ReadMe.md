@@ -2,11 +2,10 @@
 
 
 Lokad Contracts DSL is an optional console utility that you can run in the background. It 
-tracks changes to files with special compact syntax and updates CS file with message 
-contract definitions. 
+tracks changes to files with a special compact syntax and a .ddd file extension.  When the .ddd file changes, it updates the corresponding C# .cs file with message contract definitions. 
 
-Changes are immediate upon saving file (and ReSharper immediately picks them). This is an improved 
-version of Lokad Code DSL, it supports identities and can auto-generate interfaces for 
+Changes are immediate upon saving the .ddd file (and ReSharper immediately picks them up). This is an improved 
+version of the Lokad Code DSL, it supports identities and can auto-generate interfaces for 
 aggregates and aggregate state classes.
 
 **Was**:
@@ -35,30 +34,28 @@ public partial class AddSecurityPassword : ICommand<SecurityId>
 }
 ```    
 
-Lokad Code DSL is used by [Lokad.CQRS](http://lokad.github.com/lokad-cqrs/) (was originally part of it) 
-and is explained in greater detail in [BeingTheWorst Podcast](http://beingtheworst.com/) - Episode 12.
+Lokad Code DSL is used by [Lokad.CQRS](http://lokad.github.com/lokad-cqrs/) (it was originally part of it) 
+and is explained in greater detail in [Being The Worst Podcast](http://beingtheworst.com/) - [Episode 12 - Now Serving DSL.](http://beingtheworst.com/2012/episode-12-now-serving-dsl)
 
-You can try this out by starting `Sample` project and then changing `Sample\Contracts.ddd` 
+You can try this out by starting the `Lokad.Dsl.Sample` project, and then change the `Sample\Contracts.ddd` file and save it.
 (view [Contracts.ddd source] (http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.ddd)). 
-Code DSL tool will be regenerating corresponding contracts file as you change and 
-save (view [Contracts.cs source](http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.cs)).
+The Code DSL tool will run in a background console and will regenerate the corresponding contracts C# file as you change and save the .ddd file that contains the DSL (view [Contracts.cs source](http://github.com/Lokad/lokad-codedsl/blob/master/Sample/Contracts.cs)).
 
-Current DSL code generates contracts classes that are compatible with DataContracts, 
+The current DSL code generates contracts classes that are compatible with DataContracts, 
 ServiceStack.JSON and ProtoBuf.
 
-You can get download binary from [github downloads](https://github.com/Lokad/lokad-codedsl/downloads). Sometimes
-even later stable version would be available by getting latest source code and building.
+You can download the binary from [github downloads](https://github.com/Lokad/lokad-codedsl/downloads). On occasion, you can get even newer stable versions of this tool by downloading the latest source code from GitHub and building it.
 
 
-**Lokad Code DSL** ([homepage](http://lokad.github.com/lokad-codedsl/)) is shared as open 
-source project by [Lokad](http://www.lokad.com) in hopes that it would benefit the community. 
+**Lokad Code DSL** ([homepage](http://lokad.github.com/lokad-codedsl/)) is shared as an open 
+source project by [Lokad](http://www.lokad.com) with hopes that it will benefit the community. 
 
 
 Syntax Definitions
 -----------------
 ### Namespaces
 
-Add namespace for our messages  
+Define the C# namespace that our messages will be in  
 
 ```csharp
 namespace NameSpace
@@ -74,6 +71,8 @@ namespace NameSpace
 ```
 
 ### Data contract namespace
+
+Define the namespace that that DataContract attribute will use
 
 ```csharp
 extern "Lokad"
@@ -111,13 +110,12 @@ public partial class Universe
 
 ### Interface Shortcuts
 
-In order to use interface in contract classes, need to create interface shortcut first, definition
-of interface IIdentity must be contained in C# file
+To generate a contract class that implements an interface, you must define the name of the interface with the ! = shortcut first.  The definition of the interface that uses the interface identifier that you specifiy after the = must already exist and be contained in a C# file.  For example, the IIdentity interface is defined in Interfaces.cs in the sample project. 
     
 ```csharp
 if ! = IIdentity
 ```
-For the next step define simple class with one property
+Once you have asscoaited ! with an interface, define a class that implements it like this:
 
 ```csharp
 UniverseId!(long id)
@@ -141,8 +139,8 @@ public partial class UniverseId : IIdentity
 
 ### Method Argument Constants
 
-Method arguments constants allow us to define constant to replace method argument definition. For 
-example, now we can use term `dateUtc` instead full definition with argument type and name.
+Method argument constants allow us to define constant to replace a method argument definition. For 
+example, now we can use the constant term `dateUtc` instead of the full definition with the argument type and name.
 
 ```csharp
 const dateUtc = DateTime dateUtc
@@ -152,7 +150,11 @@ const dateUtc = DateTime dateUtc
 
 Application service & state
 ---------------------------
-Definition of application service must begining with interface key.
+The definition of an application service must begin with the "interface" keyword.
+
+The ? shortcut is used with command messages to define the interface that the command message implements.
+
+The ! shortcut is used with event messages to define the interface that the event message implements. 
 
 ```csharp
 interface Universe(UniverseId Id)
@@ -227,14 +229,13 @@ public partial class UniverseCreated : IUniverseEvent<UniverseId>
 }
 ```
 
-Syntax Highlights
------------------
+Syntax Highlighting
+-------------------
 
-Syntax used in the DSL tool is derived from keywords in C++ and C#. This means, that
-any text editor could provide nice highlighting, if you use language color settings
-from C++ or C#.
+The syntax used in the DSL tool is derived from keywords in the C++ and C# programming languages. This means that
+any text editor that understands these widely used programming languages can provide nice syntax highlighting (if you use the language-specific color settings from C++ or C#).
 
-Here's how DSL source code might look like:
+Here's how the DSL source code might look with syntax highlighting supported by the editor:
 
 <table>
 <thead>
@@ -251,9 +252,13 @@ Here's how DSL source code might look like:
 </tbody>
 </table>  
 
-**Visual Studio 2010 settings**
+**Visual Studio 2010/2012 DSL Syntax Highlighting Settings**
 
-Here are the settings to set up in Visual Studio:
+In Visual Studio, under the Tools-->Options menu:
+
+1. - add ddd as the Extension
+1. - Select Microsoft Visual C# as the Editor
+1. - Click Add and OK
 
 ![Visual Studio settings] (https://github.com/Lokad/lokad-codedsl/raw/master/Docs/vs2010_settings.PNG)
 
@@ -266,4 +271,4 @@ Related articles
 Feedback
 --------
 
-Please, feel free to drop feedback in the [Lokad Community](https://groups.google.com/forum/#!forum/lokad).
+Please, feel free to drop feedback in the [Lokad Community Google group](https://groups.google.com/forum/#!forum/lokad).
