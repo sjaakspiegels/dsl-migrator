@@ -82,6 +82,7 @@ namespace Lokad.CodeDsl
             foreach (var notifier in _notifiers)
             {
                 notifier.Changed += NotifierOnChanged;
+                notifier.Renamed += NotifierOnChanged;
                 notifier.EnableRaisingEvents = true;
             }
             return lookupPaths;
