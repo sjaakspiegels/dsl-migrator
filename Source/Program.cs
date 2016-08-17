@@ -33,44 +33,15 @@ namespace Lokad.CodeDsl
 
         static void Main(string[] args)
         {
-            if (!AppLock.WaitOne(TimeSpan.Zero, true))
-            {
-                return;
-            }
+	        args = new[] {@"C:\proj\skuvault\src\SkuVault.Contracts"};
+        
+            _notify = new ConsoleNotify();
 
-            if (args.Length == 0)
-            {
-                Console.WriteLine("DSL .NET contracts generator.");
-                Console.WriteLine("\tUsage: dsl.exe <path1> .. <pathN> [--tray]");
-                Console.WriteLine("\t <path1> .. <pathN> - path to folder with dsl files.");
-                Console.WriteLine("\t --tray - options to start tray application.");
-            }
+            _files = CreateFileWatchers(args);
+            StartupRebuild(_files);
 
-            if (args.Any(x => x.Equals("--tray")))
-            {
-                CreateTrayIconApp();
-
-                _notify = new TrayNotify(TrayIcon);
-
-                var options = args.ToList();
-                options.Remove("--tray");
-
-                _files = CreateFileWatchers(options.ToArray());
-                StartupRebuild(_files);
-
-                AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
-                Application.ThreadExit += ApplicationThreadExit;
-                Application.Run(new Empty());
-            }
-            else
-            {
-                _notify = new ConsoleNotify();
-
-                _files = CreateFileWatchers(args);
-                StartupRebuild(_files);
-
-                Console.ReadLine();
-            }
+            Console.ReadLine();
+         
         }
 
         private static string[] CreateFileWatchers(string [] args)
@@ -243,24 +214,9 @@ public partial class {0}",
                 };
 
   
-            File.WriteAllText(Path.ChangeExtension(fullPath, "cs"), GeneratorUtil.Build(dsl, generator));
+            File.WriteAllText(Path.ChangeExtension(fullPath, "edn"), GeneratorUtil.Build(dsl, generator));
         }
 
-        private static void CreateTrayIconApp()
-        {
-            var iconStream = Assembly.GetEntryAssembly().GetManifestResourceStream("Lokad.CodeDsl.code_colored.ico");
-            TrayIcon = new NotifyIcon
-            {
-                Visible = true,
-            };
-
-            if (iconStream != null)
-                TrayIcon.Icon = new Icon(iconStream);
-
-            TrayIcon.Click += TrayIconClick;
-            TrayIcon.ContextMenu = new ContextMenu(
-                new[] { new MenuItem("Close", (sender, eventArgs) => Close()) });
-        }
     }
 
     public interface INotify

@@ -73,6 +73,7 @@ namespace Lokad.CodeDsl
                     var fragmentType = t.GetChild(1).Text;
                     var fragmentName = t.GetChild(2).Text;
                     context.Fragments[fragmentId] = new Fragment(fragmentType, fragmentName);
+					context.CurrentEntity.Fragments[fragmentId] = new Fragment(fragmentType, fragmentName);
                     break;
                 case MessageContractsLexer.ModifierDefinition:
                     var modifier = t.GetChild(0).Text;

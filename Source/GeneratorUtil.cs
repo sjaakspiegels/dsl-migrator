@@ -11,7 +11,7 @@ namespace Lokad.CodeDsl
         {
             var builder = new StringBuilder();
             using (var stream = new StringWriter(builder))
-            using (var writer = new IndentedTextWriter(stream, "    "))
+            using (var writer = new IndentedTextWriter(stream, "  "))
             {
                 generator.Generate(GenerateContext(source), writer);
             }

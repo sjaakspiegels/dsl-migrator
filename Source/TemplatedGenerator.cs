@@ -1,6 +1,8 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -34,85 +36,256 @@ public sealed class {0}";
         {
             var writer = new CodeWriter(outer);
 
+			writer.WriteLine("{");
+	        writer.Indent += 1;
             
+			writer.WriteLine(":using [");
+	        writer.Indent += 1;
             foreach (var source in context.Using.Distinct().OrderBy(s => s))
             {
-                writer.WriteLine("using {0};", source);
+                writer.WriteLine(source);
             }
+	        writer.Indent -= 1;
+			writer.WriteLine("]");
 
-            writer.WriteLine(@"
-// ReSharper disable PartialTypeWithSinglePart
-// ReSharper disable UnusedMember.Local");
+			
 
-
-            writer.WriteLine("namespace {0}", context.CurrentNamespace);
-            writer.WriteLine("{");
-
-            writer.Indent += 1;
-
-            if (!string.IsNullOrEmpty(Region))
-            {
-                writer.WriteLine("#region {0}", Region);
-            }
-
+            writer.WriteLine(":namespace {0}", context.CurrentNamespace);
+            
+            
             WriteContext(writer, context);
 
 
-            if (!string.IsNullOrEmpty(Region))
-            {
-                writer.WriteLine("#endregion");
-            }
-
-            writer.Indent -= 1;
+	        writer.Indent -= 1;
             writer.WriteLine("}");
         }
 
         private void WriteContext(CodeWriter writer, Context context)
         {
-            foreach (var contract in context.Contracts)
-            {
-                writer.Write(ClassNameTemplate, contract.Name, context.CurrentExtern);
 
-                if (contract.Modifiers.Any())
-                {
-                    writer.Write(" : {0}", string.Join(", ", contract.Modifiers.Select(s => s.Interface).ToArray()));
-                }
-                writer.WriteLine();
+			writer.WriteLine(":file Messages.cs");
+	        if (!string.IsNullOrWhiteSpace(context.CurrentExtern))
+	        {
+		        writer.WriteLine(":extern "+ context.CurrentExtern);
+	        }
+			writer.WriteLine(":const {");
+	        writer.Indent += 1;
 
-                writer.WriteLine("{");
-                writer.Indent += 1;
+	        var rootFragment = context.Entities.Last().Fragments;
+	        foreach (var fragment in rootFragment)
+	        {
+		        writer.WriteLine(":{0} [{1} {2}]", fragment.Key, fragment.Value.Type, fragment.Value.Name);
+	        }
+	        writer.Indent -= 1;
+			writer.WriteLine("}");
 
-                if (contract.Members.Count > 0)
-                {
-                    WriteMembers(contract, writer);
 
-                    writer.WriteLine();
-                    WritePrivateCtor(writer, contract);
+	        var globalReverse = rootFragment.ToDictionary(p => "(" +p.Value.Type + " " + p.Value.Name + ")", p => p.Key,
+		        StringComparer.OrdinalIgnoreCase);
 
-                    writer.Write("public {0} (", contract.Name);
-                    WriteParameters(contract, writer);
-                    writer.WriteLine(")");
-                    writer.WriteLine("{");
+			writer.WriteLine(":aggs [");
+	        writer.Indent += 1;
+			foreach (var entity in context.Entities.Reverse())
+			{
+				var reverse = new Dictionary<string,string>(globalReverse,StringComparer.OrdinalIgnoreCase);
+				
+				foreach (var p in entity.Fragments)
+				{
+					var key = "(" + p.Value.Type + " " + p.Value.Name + ")";
+					reverse[key] = p.Key;
+				}
+				
+				writer.WriteLine("{");
+				writer.Indent += 1;
+				var name = (entity.Name ?? "default") == "default" ? "nil" : entity.Name;
+				writer.WriteLine(":name {0}", name);
 
-                    writer.Indent += 1;
-                    WriteAssignments(contract, writer);
-                    writer.Indent -= 1;
+				var localFragments = entity.Fragments.Where(s => !rootFragment.ContainsKey(s.Key));
 
-                    writer.WriteLine("}");
+				if (localFragments.Any())
+				{
+					writer.WriteLine(":const {");
+					writer.Indent += 1;
 
-                }
-                WriteToString(writer, contract);
-                writer.Indent -= 1;
-                writer.WriteLine("}");
-            }
-            foreach (var entity in context.Entities)
-            {
-                if ((entity.Name ?? "default") == "default")
-                    continue;
+					foreach (var fragment in entity.Fragments)
+					{
+						writer.WriteLine(":{0} ({1} {2})", fragment.Key, fragment.Value.Type, fragment.Value.Name);
+					}
+					writer.Indent -= 1;
+					writer.WriteLine("}");
+				}
 
-                GenerateEntityInterface(entity, writer, "?", "public interface I{0}ApplicationService");
-                GenerateEntityInterface(entity, writer, "!", "public interface I{0}State");
-            }
+				
+				if (entity.FixedMembers.Any())
+				{
+					writer.Write(":common [");
+					int pos = 0;
+					foreach (var fixedMember in entity.FixedMembers)
+					{
+						if (pos ++ > 0)
+						{
+							writer.Write(" ");
+						}
+						var full = string.Format("({0} {1})", fixedMember.Type, fixedMember.Name);
+						string key;
+						if (reverse.TryGetValue(full, out key))
+						{
+							writer.Write(":" + key);
+						}
+						else
+						{
+							writer.Write(full);
+						}
+					}
+					writer.WriteLine("]");
+				}
+
+				foreach (var modifier in entity.Modifiers.AllKeys)
+				{
+					switch (modifier)
+					{
+						case "!":
+							writer.WriteLine(":evt {0}", entity.Modifiers[modifier]);
+							break;
+						case "?":
+							writer.WriteLine(":cmd {0}", entity.Modifiers[modifier]);
+							break;
+						default:
+							throw new InvalidOperationException("Unknown mod");
+					}
+				}
+
+				writer.WriteLine(":messages [");
+				writer.Indent += 1;
+
+				var lastWasEvent = false;
+
+				foreach (var message in entity.Messages)
+				{
+					var modifier = message.Modifiers.Select(m => m.Identifier).FirstOrDefault() ?? ".";
+					if (modifier == "?" && lastWasEvent)
+					{
+						writer.WriteLine();
+					}
+					bool indented = false;
+					if (modifier == "!")
+					{
+						writer.Indent += 1;
+						indented = true;
+					}
+					
+					writer.Write("(");
+						
+					if (message.Modifiers.Count > 1)
+					{
+						throw new InvalidOperationException();
+					}
+					lastWasEvent = false;
+					switch (modifier)
+					{
+						case "?":
+							writer.Write("cmd ");
+							break;
+						case "!":
+							writer.Write("evt ");
+							lastWasEvent = true;
+							break;
+						case ".":
+							writer.Write("rec ");
+							break;
+						default:
+							throw new InvalidOperationException();
+					}
+					writer.Write(message.Name + " [");
+
+					var count = modifier == "." ? 0 : entity.FixedMembers.Count;
+					int pos = 0;
+					foreach (var members in message.Members.Where(m => m.Kind == Member.Kinds.Field).Skip(count))
+					{
+						var full = string.Format("({0} {1})", members.Type, members.Name);
+						string value;
+
+						if (pos++ > 0)
+						{
+							writer.Write(" ");
+						}
+
+						if (reverse.TryGetValue(full, out value))
+						{
+							writer.Write(":" + value);
+						}
+						else
+						{
+							writer.Write(full);
+						}
+					}
+					
+
+					if (message.StringRepresentation != null)
+					{
+						writer.WriteLine("]");
+						writer.WriteLine(message.StringRepresentation  + ")");
+					}
+					else
+					{
+						writer.WriteLine("])");
+					}
+
+					if (indented)
+					{
+						writer.Indent -= 1;
+					}
+
+
+
+				}
+
+				writer.Indent -= 1;
+				writer.WriteLine("]");
+
+				writer.Indent -= 1;
+				writer.WriteLine("}");
+			}
+	        writer.Indent -= 1;
+			writer.WriteLine("]");
+
+			//foreach (var contract in context.Contracts)
+			//{
+			//    writer.Write(ClassNameTemplate, contract.Name, context.CurrentExtern);
+
+			//    if (contract.Modifiers.Any())
+			//    {
+			//        writer.Write(" : {0}", string.Join(", ", contract.Modifiers.Select(s => s.Interface).ToArray()));
+			//    }
+			//    writer.WriteLine();
+
+			//    writer.WriteLine("{");
+			//    writer.Indent += 1;
+
+			//    if (contract.Members.Count > 0)
+			//    {
+			//        WriteMembers(contract, writer);
+
+			//        writer.WriteLine();
+			//        WritePrivateCtor(writer, contract);
+
+			//        writer.Write("public {0} (", contract.Name);
+			//        WriteParameters(contract, writer);
+			//        writer.WriteLine(")");
+			//        writer.WriteLine("{");
+
+			//        writer.Indent += 1;
+			//        WriteAssignments(contract, writer);
+			//        writer.Indent -= 1;
+
+			//        writer.WriteLine("}");
+
+			//    }
+			//    WriteToString(writer, contract);
+			//    writer.Indent -= 1;
+			//    writer.WriteLine("}");
+			//}
+
         }
 
         static void WritePrivateCtor(CodeWriter writer, Message contract)

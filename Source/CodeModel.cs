@@ -46,7 +46,8 @@ namespace Lokad.CodeDsl
         public List<Member> FixedMembers { get; set; }
         public List<Message> Messages { get; set; }
         public NameValueCollection Modifiers { get; set; }
-        public string Namespace;
+		public IDictionary<string, Fragment> Fragments = new Dictionary<string, Fragment>();
+		public string Namespace;
         
 
         public Entity(string name)
@@ -79,7 +80,15 @@ namespace Lokad.CodeDsl
         public readonly string DslName;
         public Member(string type, string name, string dslName, Kinds kind = Kinds.Field)
         {
-            Name = name;
+	        if (type != null)
+	        {
+		        if (type.Trim().EndsWith("[]"))
+		        {
+			        type = "[" + type.Replace("[]", "").Trim() + "]";
+		        }
+	        }
+
+	        Name = name;
             Type = type;
             Kind = kind;
             DslName = dslName;
