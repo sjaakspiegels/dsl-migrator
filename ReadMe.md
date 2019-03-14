@@ -183,6 +183,10 @@ interface Universe(UniverseId Id)
         UniverseCreated!(name)
         // override ToString() for event
         explicit "Universe {name} created"
+
+	async PopulateUniverse?(name)
+		// override ToString() for command
+        explicit "Populate universe - {name}"
 }
 ```
 
@@ -192,6 +196,7 @@ interface Universe(UniverseId Id)
 public interface IUniverseApplicationService
 {
     void When(CreateUniverse c);
+    Task When(CreateUniverse c);
 }
 
 public interface IUniverseState
@@ -275,6 +280,10 @@ In Visual Studio, under the Tools-->Options menu:
 
 ![Visual Studio settings] (https://github.com/Lokad/lokad-codedsl/raw/master/Docs/vs2010_settings.PNG)
 
+Generate Lexer and Parser
+-----------
+Download antlr-dotnet-tool-3.4.1.9004.7z (http://www.tunnelvisionlabs.com/downloads/antlr/antlr-dotnet-tool-3.4.1.9004.7z) which contains both the runtime (need to be added as reference in your project), and the tool (ANTLR3.exe which can generate code from .g files, and Antlr3.targets/AntlrBuildTask.dll which provide MSBuild support).
+Run antlr3 MessageContracts.g to generate the parser and lexer files.
 
 Related articles
 -----------

@@ -8,11 +8,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Media;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -33,18 +31,21 @@ namespace Lokad.CodeDsl
 
         static void Main(string[] args)
         {
-	        args = new[] {@"C:\proj\skuvault\src\SkuVault.Contracts"};
-        
+            if (args.Length == 0)
+            {
+                args = new[] { @"C:\Users\sjaak\Source\Repos\dsl-migrator\Sample" };
+            }
+
             _notify = new ConsoleNotify();
 
             _files = CreateFileWatchers(args);
             StartupRebuild(_files);
 
             Console.ReadLine();
-         
+
         }
 
-        private static string[] CreateFileWatchers(string [] args)
+        private static string[] CreateFileWatchers(string[] args)
         {
             var lookupPaths = FigureOutLookupPath(args);
 
@@ -59,7 +60,7 @@ namespace Lokad.CodeDsl
             return lookupPaths;
         }
 
-        private static void StartupRebuild(string [] lookupPAth)
+        private static void StartupRebuild(string[] lookupPAth)
         {
             var files = new List<FileInfo>();
 
@@ -84,7 +85,7 @@ namespace Lokad.CodeDsl
 
             message += "\r\n\r\nClick icon to see last message.";
 
-             _notify.Notify("Dsl started", message, ToolTipIcon.Info);
+            _notify.Notify("Dsl started", message, ToolTipIcon.Info);
 
             foreach (var fileInfo in files)
             {
@@ -107,10 +108,10 @@ namespace Lokad.CodeDsl
             return lookupPaths
                 .Where(Directory.Exists)
                 .Distinct()
-                .Select(d => new FileSystemWatcher(d, FileNamePattern) { IncludeSubdirectories = true})
+                .Select(d => new FileSystemWatcher(d, FileNamePattern) { IncludeSubdirectories = true })
                 .ToArray();
         }
-        
+
         static void ApplicationThreadExit(object sender, EventArgs e)
         {
             Close();
@@ -137,7 +138,7 @@ namespace Lokad.CodeDsl
             Application.Exit();
         }
 
-        static string [] FigureOutLookupPath(string[] args)
+        static string[] FigureOutLookupPath(string[] args)
         {
             if (args.Length > 0)
             {
@@ -150,7 +151,7 @@ namespace Lokad.CodeDsl
             {
                 case "Release":
                 case "Debug":
-                    return new[] {"../../.."};
+                    return new[] { "../../.." };
                 default:
                     return new[] { dir.FullName };
             }
@@ -175,7 +176,7 @@ namespace Lokad.CodeDsl
                 _notify.Notify(args.Name, "File rebuild complete", ToolTipIcon.Info);
                 SystemSounds.Beep.Play();
             }
-            catch (IOException) {}
+            catch (IOException) { }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
@@ -204,17 +205,15 @@ namespace Lokad.CodeDsl
         {
             var dsl = text;
             var generator = new TemplatedGenerator
-                {
-                    GenerateInterfaceForEntityWithModifiers = "?",
-                    TemplateForInterfaceName = "public interface I{0}Aggregate",
-                    TemplateForInterfaceMember = "void When({0} c);",
-                    ClassNameTemplate = @"[DataContract(Namespace = {1})]
+            {
+                GenerateInterfaceForEntityWithModifiers = "?",
+                TemplateForInterfaceName = "public interface I{0}Aggregate",
+                TemplateForInterfaceMember = "void When({0} c);",
+                ClassNameTemplate = @"[DataContract(Namespace = {1})]
 public partial class {0}",
-                    MemberTemplate = "[DataMember(Order = {0})] public {1} {2} {{ get; private set; }}",
-                };
-
-  
-            File.WriteAllText(Path.ChangeExtension(fullPath, "edn"), GeneratorUtil.Build(dsl, generator));
+                MemberTemplate = "[DataMember(Order = {0})] public {1} {2} {{ get; private set; }}",
+            };
+            File.WriteAllText(Path.ChangeExtension(fullPath, "cs"), GeneratorUtil.Build(dsl, generator));
         }
 
     }

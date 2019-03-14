@@ -2,7 +2,7 @@ grammar MessageContracts;
 
 options 
 {
-	language = 'CSharp2'; 
+	language = 'CSharp3'; 
 	output=AST; 
 }
 
@@ -23,6 +23,7 @@ tokens
 	NamespaceToken;
 	ExternToken;
 	UsingToken;
+	Sync;
 }
 
 @lexer::namespace { MessageContracts }
@@ -62,14 +63,14 @@ entity_declaration
 	-> ^(EntityDefinition[$lc,"Block"] ID block declaration*);
 	
 type_declaration
-	: ID Modifier? block -> ^(TypeToken ID block Modifier?);
-	
+	: ASYNC ID Modifier? block -> ^(TypeToken ASYNC ID block Modifier?) |
+		    ID Modifier? block -> ^(TypeToken Sync ID block Modifier?);
+
 member 	
 	:	ID ID -> ^(MemberToken ID ID)
 	|	ID -> ^(FragmentReference ID)
 	;
 
-	
 block
     :   lc='('
             (member (',' member)*)?
@@ -93,12 +94,13 @@ CONST
 	: 'const';	
 INTERFACE 	
 	:	'interface';
-
 NAMESPACE 
 	:	'namespace';
 EXTERN
     :	'extern';
-    
+ASYNC
+	: 'async';
+
 ID  :	('a'..'z'|'A'..'Z'|'_')('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'<'|'>'|'['|']')* ;
 
 
@@ -111,6 +113,7 @@ Modifier
 
 INT :	'0'..'9'+;   
 
+ARRAY : '[]';
 
 STRING
     :  '"' ( ESC_SEQ | ~('\\'|'"') )* '"'

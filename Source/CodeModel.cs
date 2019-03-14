@@ -21,7 +21,7 @@ namespace Lokad.CodeDsl
 
         public string CurrentNamespace = "Lokad.Contracts";
         public string CurrentExtern = "Lokad.Contracts";
-        public IList<string> Using; 
+        public IList<string> Using;
 
         public Context()
         {
@@ -35,6 +35,7 @@ namespace Lokad.CodeDsl
 
             var entity = new Entity("default");
             entity.Modifiers.Add("?", "ICommand");
+            entity.Modifiers.Add("&", "ICommand");
             entity.Modifiers.Add("!", "IEvent");
             Entities.Push(entity);
         }
@@ -46,9 +47,8 @@ namespace Lokad.CodeDsl
         public List<Member> FixedMembers { get; set; }
         public List<Message> Messages { get; set; }
         public NameValueCollection Modifiers { get; set; }
-		public IDictionary<string, Fragment> Fragments = new Dictionary<string, Fragment>();
-		public string Namespace;
-        
+        public IDictionary<string, Fragment> Fragments = new Dictionary<string, Fragment>();
+
 
         public Entity(string name)
         {
@@ -80,15 +80,15 @@ namespace Lokad.CodeDsl
         public readonly string DslName;
         public Member(string type, string name, string dslName, Kinds kind = Kinds.Field)
         {
-	        if (type != null)
-	        {
-		        if (type.Trim().EndsWith("[]"))
-		        {
-			        type = "[" + type.Replace("[]", "").Trim() + "]";
-		        }
-	        }
+            //if (type != null)
+            //{
+            //    if (type.Trim().EndsWith("[]"))
+            //    {
+            //        type = "[" + type.Replace("[]", "").Trim() + "]";
+            //    }
+            //}
 
-	        Name = name;
+            Name = name;
             Type = type;
             Kind = kind;
             DslName = dslName;
@@ -102,11 +102,13 @@ namespace Lokad.CodeDsl
 
     public sealed class Message
     {
+        public readonly string Keyword;
         public readonly string Name;
         public readonly IList<Modifier> Modifiers;
 
-        public Message(string name, IList<Modifier> modifiers)
+        public Message(string keyword, string name, IList<Modifier> modifiers)
         {
+            Keyword = keyword;
             Name = name;
             Modifiers = modifiers;
         }

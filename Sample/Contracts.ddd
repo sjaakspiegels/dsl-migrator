@@ -3,6 +3,8 @@ namespace Lokad
 // define data contract namespace for all classes
 extern "Lokad"
 
+using System.Threading.Tasks
+
 // define shortcut for interface IIdentity
 if ! = IIdentity
 
@@ -11,6 +13,8 @@ UniverseId!(long id)
 GalaxyId!(long id)
 
 Universe(UniverseId Id, string name)
+
+Document(Guid id, byte[] inhoud)
 
 // define alias
 const name = string name
@@ -36,12 +40,23 @@ interface Universe(UniverseId Id)
         UniverseDestroyed!(string reason)
             explicit "Universe destroyed, reason - {reason}"
 
+DestroyUniverseNow?(string reason)
+explicit "Destroy universe, reason - {reason}"
+
+
+
     AddGalaxy?(name, GalaxyType type)
         explicit "Create {type} galaxy - {name}"
         GalaxyAdded!(GalaxyId galaxyId, name, GalaxyType type, dateUtc)
             explicit "[{dateUtc:yyyy.MM.dd HH:mm}] Galaxy {name} of type {type} added to universe."
+
     WipeGalaxy?(GalaxyId galaxyId, string reason)
         explicit "Wipe galaxy {galaxyId}, reason - {reason}"
         GalaxyWiped!(GalaxyId galaxyId, name, string reason, dateUtc)
+            explicit "[{dateUtc:yyyy.MM.dd HH:mm}] Galaxy {name} wiped, reason - {reason}"
+
+    async PopulateGalaxy?(GalaxyId galaxyId, string reason)
+        explicit "Wipe galaxy {galaxyId}, reason - {reason}"
+        GalaxyPopulated!(GalaxyId galaxyId, name, string reason, dateUtc)
             explicit "[{dateUtc:yyyy.MM.dd HH:mm}] Galaxy {name} wiped, reason - {reason}"
 }

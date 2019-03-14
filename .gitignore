@@ -12,3 +12,5 @@ _ReSharper.*
 *.cache
 ~$*
 *~
+/.vs/Dsl/v15/Server/sqlite3
+/packages

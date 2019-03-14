@@ -5,12 +5,12 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Antlr.Runtime;
 using Antlr.Runtime.Tree;
 using MessageContracts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Lokad.CodeDsl
 {
@@ -59,7 +59,7 @@ namespace Lokad.CodeDsl
                 yield break;
             }
 
-            var node = (Antlr.Runtime.Tree.CommonErrorNode) tree;
+            var node = (Antlr.Runtime.Tree.CommonErrorNode)tree;
             throw new InvalidOperationException(string.Format("Line: {0}\r\nUnknown fragment: {1}", node.start.Line, node.Text));
         }
 
@@ -73,7 +73,7 @@ namespace Lokad.CodeDsl
                     var fragmentType = t.GetChild(1).Text;
                     var fragmentName = t.GetChild(2).Text;
                     context.Fragments[fragmentId] = new Fragment(fragmentType, fragmentName);
-					context.CurrentEntity.Fragments[fragmentId] = new Fragment(fragmentType, fragmentName);
+                    context.CurrentEntity.Fragments[fragmentId] = new Fragment(fragmentType, fragmentName);
                     break;
                 case MessageContractsLexer.ModifierDefinition:
                     var modifier = t.GetChild(0).Text;
@@ -84,11 +84,12 @@ namespace Lokad.CodeDsl
                     }
                     break;
                 case MessageContractsLexer.TypeToken:
-                    var name = t.GetChild(0).Text;
-                    var block = t.GetChild(1);
+                    var keyword = t.GetChild(0).Text;
+                    var name = t.GetChild(1).Text;
+                    var block = t.GetChild(2);
 
                     var modifiers = new List<Modifier>();
-                    for (int i = 2; i < t.ChildCount; i++)
+                    for (int i = 3; i < t.ChildCount; i++)
                     {
                         var mod = t.GetChild(i).Text;
                         var used = context.CurrentEntity.Modifiers.GetValues(mod);
@@ -105,7 +106,7 @@ namespace Lokad.CodeDsl
                     }
 
 
-                    var message = new Message(name, modifiers);
+                    var message = new Message(keyword, name, modifiers);
                     if (modifiers.Any())
                     {
                         // only commands and events have modifiers
@@ -170,7 +171,7 @@ namespace Lokad.CodeDsl
                     context.Using.Add(us);
                     break;
                 default:
-                    var node = (CommonErrorNode) t;
+                    var node = (CommonErrorNode)t;
                     throw new InvalidOperationException(string.Format("Line: {0}\r\nUnexpected token: {1}", node.start.Line, node.Text));
             }
         }
@@ -207,7 +208,7 @@ namespace Lokad.CodeDsl
             }
             return ctx;
         }
-    
+
     }
 
     public static class Extend
@@ -218,7 +219,7 @@ namespace Lokad.CodeDsl
             {
                 yield return self.GetChild(i);
             }
-        } 
+        }
     }
 }
 
