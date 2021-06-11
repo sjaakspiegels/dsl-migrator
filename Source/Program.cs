@@ -210,8 +210,8 @@ namespace Lokad.CodeDsl
                 TemplateForInterfaceName = "public interface I{0}Aggregate",
                 TemplateForInterfaceMember = "void When({0} c);",
                 ClassNameTemplate = @"[DataContract(Namespace = {1})]
-public partial class {0}",
-                MemberTemplate = "[DataMember(Order = {0})] public {1} {2} {{ get; private set; }}",
+public record {0}",
+                MemberTemplate = "[DataMember(Order = {0})] public {1} {2} {{ get; init; }}",
             };
             File.WriteAllText(Path.ChangeExtension(fullPath, "cs"), GeneratorUtil.Build(dsl, generator));
         }
