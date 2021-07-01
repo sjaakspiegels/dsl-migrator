@@ -218,10 +218,12 @@ public partial record {0}",
             File.WriteAllText(
                 Path.Combine(fileInfo.DirectoryName, "IsExternalInit.cs"),
                 @"// Zie https://stackoverflow.com/a/64749403 voor uitleg waarom IsExternalInit noodzakelijk is.
+#if NETFRAMEWORK || NETSTANDARD
 namespace System.Runtime.CompilerServices
 {
     internal static class IsExternalInit {}
-}");
+}
+#endif");
         }
     }
 
