@@ -41,13 +41,6 @@ public sealed class {0}";
             }
 
             writer.WriteLine(@"
-// Zie https://stackoverflow.com/a/64749403 voor uitleg waarom IsExternalInit noodzakelijk is.
-namespace System.Runtime.CompilerServices
-{
-    internal static class IsExternalInit { }
-}");
-
-            writer.WriteLine(@"
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Local");
 
