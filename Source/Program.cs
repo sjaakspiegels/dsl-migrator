@@ -94,7 +94,7 @@ namespace Lokad.CodeDsl
                 Changed(fileInfo.FullName, text);
                 try
                 {
-                    Rebuild(text, fileInfo.FullName);
+                    Rebuild(text, fileInfo);
                 }
                 catch (Exception ex)
                 {
@@ -171,7 +171,7 @@ namespace Lokad.CodeDsl
 
                 var message = string.Format("Changed: {1}-{0}", args.Name, args.ChangeType);
                 Console.WriteLine(message);
-                Rebuild(text, args.FullPath);
+                Rebuild(text, new FileInfo(args.FullPath));
 
                 _notify.Notify(args.Name, "File rebuild complete", ToolTipIcon.Info);
                 SystemSounds.Beep.Play();
@@ -201,7 +201,7 @@ namespace Lokad.CodeDsl
             return changed;
         }
 
-        static void Rebuild(string text, string fullPath)
+        static void Rebuild(string text, FileInfo fileInfo)
         {
             var dsl = text;
             var generator = new TemplatedGenerator
@@ -210,12 +210,21 @@ namespace Lokad.CodeDsl
                 TemplateForInterfaceName = "public interface I{0}Aggregate",
                 TemplateForInterfaceMember = "void When({0} c);",
                 ClassNameTemplate = @"[DataContract(Namespace = {1})]
-public partial class {0}",
-                MemberTemplate = "[DataMember(Order = {0})] public {1} {2} {{ get; private set; }}",
+public partial record {0}",
+                MemberTemplate = "[DataMember(Order = {0})] public {1} {2} {{ get; init; }}",
             };
-            File.WriteAllText(Path.ChangeExtension(fullPath, "cs"), GeneratorUtil.Build(dsl, generator));
-        }
+            File.WriteAllText(Path.ChangeExtension(fileInfo.FullName, "cs"), GeneratorUtil.Build(dsl, generator));
 
+            File.WriteAllText(
+                Path.Combine(fileInfo.DirectoryName, "IsExternalInit.cs"),
+                @"// Zie https://stackoverflow.com/a/64749403 voor uitleg waarom IsExternalInit noodzakelijk is.
+#if NETFRAMEWORK || NETSTANDARD
+namespace System.Runtime.CompilerServices
+{
+    internal static class IsExternalInit {}
+}
+#endif");
+        }
     }
 
     public interface INotify
